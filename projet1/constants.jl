@@ -1,0 +1,1 @@
+PROJET_1_PATH = @__DIR__
