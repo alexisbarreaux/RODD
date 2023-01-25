@@ -1,6 +1,6 @@
 
 
-function parser(inst::String, n::Int64=10, k::Int64=6)
+function parser(inst::String="probabilities.txt", n::Int64=10, k::Int64=6)
     f    = open(inst)
     readline(f)
     readline(f)
