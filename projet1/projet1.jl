@@ -35,6 +35,7 @@ function reserveSolve(case::Int64, instance::String= "probabilities.txt",silent:
     alphas = returnAlphas(case)
     a = cost()
     p, n = parser(PROJET_1_PATH * "\\" * instance)
+    println(p)
 
     reserve = [(i,j) for i in 2:n+1 for j in 2:n+1]
     border = vcat([(i,j) for i in 1:n+2 for j in [1, n+2]], [(i,j) for i in [1,n+2] for j in 2:n+1])
@@ -56,7 +57,7 @@ function reserveSolve(case::Int64, instance::String= "probabilities.txt",silent:
     @variable(model, c[i in 1:n+2, j in 1:n+2], Bin)
 
     # Objective : sum on all sites if they are used
-    @objective(model, Max, sum(a[i,j] * x[i,j] for (i,j) in reserve))
+    @objective(model, Min, sum(a[i,j] * x[i,j] for (i,j) in reserve))
 
     ### Constraints
     # Links between x and c
@@ -69,7 +70,12 @@ function reserveSolve(case::Int64, instance::String= "probabilities.txt",silent:
     @constraint(model, [k in dangerSpecies], sum(c[i,j]*log(1-p[k,i,j]) for (i,j) in reserve) <= log(1- alphas[k]))
     @constraint(model, [k in communeSpecies], sum(x[i,j]*log(1-p[k,i,j]) for (i,j) in reserve) <= log(1- alphas[k]))
 
-    
+    """
+    f = open("model.lp", "w")
+    print(f, model)
+    close(f)
+    """
+
     optimize!(model)
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
     isOptimal = termination_status(model) == MOI.OPTIMAL
@@ -79,11 +85,25 @@ function reserveSolve(case::Int64, instance::String= "probabilities.txt",silent:
         c_val = JuMP.value.(c)
         dangerSpecies = [1,2,3]
         communeSpecies = [4,5,6]
+        for i in 2:n+1
+            println()
+            for j in 2:n+1
+                if c_val[i,j] == 1
+                    print("C ")
+                elseif x_val[i,j] == 1
+                    print("T ")
+                else
+                    print("_ ")
+                end
+            end
+        end
+        println()
+
         for k in dangerSpecies
-            println("Specie " * string(k) * " survival rate " * string(1 - prod([1- p[k,i,j]*c_val[i,j] for (i,j) in reserve])))
+            println("Specie " * string(k) * " survival rate " * string(round(1 - prod([1- p[k,i,j]*c_val[i,j] for (i,j) in reserve]),digits=4)))
         end
         for k in communeSpecies
-            println("Specie " * string(k) * " survival rate " * string(1 - prod([1- p[k,i,j]*x_val[i,j] for (i,j) in reserve])))
+            println("Specie " * string(k) * " survival rate " * string(round(1 - prod([1- p[k,i,j]*x_val[i,j] for (i,j) in reserve]),digits=4)))
         end
         return JuMP.objective_value(model)
     else
