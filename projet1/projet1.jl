@@ -63,6 +63,7 @@ function reserveSolve(case::Int64, instance::String= "probabilities.txt",silent:
     # Links between x and c
     @constraint(model, [(i,j) in reserve], x[i,j] >= c[i,j])
     @constraint(model, [(i,j) in reserve], 8*c[i,j] <= sum(x[l,k] for (l,k) in neighbors(i,j)))
+    @constraint(model, [(i,j) in reserve],  c[i,j] >= sum(x[l,k] for (l,k) in neighbors(i,j)) - 7)
     # x and c must be empty on border
     @constraint(model, [(i,j) in border], x[i,j] == 0)
     @constraint(model, [(i,j) in border], c[i,j] == 0)
@@ -153,6 +154,7 @@ function randomReserveSolve(case::Int64, n::Int64, k::Int64, silent::Bool=true):
     # Links between x and c
     @constraint(model, [(i,j) in reserve], x[i,j] >= c[i,j])
     @constraint(model, [(i,j) in reserve], 8*c[i,j] <= sum(x[l,k] for (l,k) in neighbors(i,j)))
+    @constraint(model, [(i,j) in reserve],  c[i,j] >= sum(x[l,k] for (l,k) in neighbors(i,j)) - 7)
     # x and c must be empty on border
     @constraint(model, [(i,j) in border], x[i,j] == 0)
     @constraint(model, [(i,j) in border], c[i,j] == 0)
