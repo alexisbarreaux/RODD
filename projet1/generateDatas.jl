@@ -12,9 +12,9 @@ function generateDatas(n::Int64, k::Int64, e::Int64)
                         p[l,i,j] = round(rand()*0.5, digits=1)
                     end
                 elseif l > e && cpt <= 0.2
-                    p[l,i,j] = round(rand()*0.5, digits=2)
+                    p[l,i,j] = round(rand()*0.5, digits=1)
                     while p[l,i,j]==1.0
-                        p[l,i,j] = round(rand()*0.5, digits=2)
+                        p[l,i,j] = round(rand()*0.5, digits=1)
                     end
                 end
             end
