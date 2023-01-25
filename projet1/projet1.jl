@@ -27,7 +27,7 @@ function returnAlphas(case::Int64)::Vector{Float64}
     end
 end
 
-function reserveSolve(case::Int64, instance::String= "probabilities.txt",silent::Bool=false)::Any
+function reserveSolve(case::Int64, instance::String= "probabilities.txt",silent::Bool=true)::Any
     """
     """
     # Directly load data file
@@ -35,7 +35,6 @@ function reserveSolve(case::Int64, instance::String= "probabilities.txt",silent:
     alphas = returnAlphas(case)
     a = cost()
     p, n = parser(PROJET_1_PATH * "\\" * instance)
-    println(p)
 
     reserve = [(i,j) for i in 2:n+1 for j in 2:n+1]
     border = vcat([(i,j) for i in 1:n+2 for j in [1, n+2]], [(i,j) for i in [1,n+2] for j in 2:n+1])
@@ -105,6 +104,12 @@ function reserveSolve(case::Int64, instance::String= "probabilities.txt",silent:
         for k in communeSpecies
             println("Specie " * string(k) * " survival rate " * string(round(1 - prod([1- p[k,i,j]*x_val[i,j] for (i,j) in reserve]),digits=4)))
         end
+
+        # Result returning
+        print("Nodes " * string(JuMP.node_count(model)) * " ")
+        print("Time " * string(round(JuMP.solve_time(model), digits= 5)) * " ")
+        print("Objective " * string(JuMP.objective_value(model)) * " ")
+        println()
         return JuMP.objective_value(model)
     else
         println("Problem is not feasible !!!")
