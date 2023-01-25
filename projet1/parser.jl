@@ -2,7 +2,7 @@ include("./constants.jl")
 
 
 function parser(inst::String="probabilities.txt", n::Int64=10, k::Int64=6)
-    f    = open(PROJET_1_PATH * "\\" * inst)
+    f    = open(PROJET_1_PATH * "/" * inst)
     readline(f)
     readline(f)
     p = zeros(k,n+2,n+2)
@@ -15,7 +15,7 @@ function parser(inst::String="probabilities.txt", n::Int64=10, k::Int64=6)
             line = readline(f)
             continue
         end
-        p[cpt, parse(Int,line[2]), parse(Int,line[3])] = parse(Float64,line[4])
+        p[cpt, parse(Int,line[2])+1, parse(Int,line[3])+1] = parse(Float64,line[4])
         line = readline(f)
     end
     return p, n 
