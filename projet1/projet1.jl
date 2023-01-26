@@ -180,9 +180,9 @@ function randomReserveSolve(case::Int64, n::Int64, k::Int64, silent::Bool=true):
         for i in 2:n+1
             println()
             for j in 2:n+1
-                if c_val[i,j] == 1
+                if c_val[i,j] >= 1 - 1e-6
                     print("C ")
-                elseif x_val[i,j] == 1
+                elseif x_val[i,j] >= 1 - 1e-6
                     print("T ")
                 else
                     print("_ ")
