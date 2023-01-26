@@ -3,11 +3,13 @@ using CPLEX
 
 include("./constants.jl")
 include("./parser.jl")
+include("./generateDatas.jl")
 
 
 """
 include("./projet1/projet1.jl")
 reserveSolve("taxe_grille_2x3.txt")
+randomReserveSolve(1, 20,4)
 """
 function neighbors(i::Int64, j::Int64)::Vector{Tuple{Int64, Int64}}
     return [(i+1, j), (i+1, j+1), (i+1, j-1), (i, j-1), (i,j+1), (i-1,j), (i-1, j+1), (i-1, j-1)]
