@@ -23,7 +23,6 @@ function dinkelbach(inputFile::String="data", showResult::Bool= false, silent::B
     
     include("./projet2/data/" * inputFile * ".jl")
     numberOfSites = n*n
-    println("Building base dinkelbach")
 
     # Creating the model
     model = Model(CPLEX.Optimizer)
