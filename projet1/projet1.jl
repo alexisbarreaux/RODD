@@ -8,7 +8,7 @@ include("./generateDatas.jl")
 
 """
 include("./projet1/projet1.jl")
-reserveSolve("taxe_grille_2x3.txt")
+reserveSolve(1)
 randomReserveSolve(1, 20,4)
 """
 function neighbors(i::Int64, j::Int64)::Vector{Tuple{Int64, Int64}}
