@@ -40,8 +40,8 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
     # Valid children numbers constraint
     @constraint(model, sum(x[i] for i in 1:nbMale) == sum(x[i] for i in nbMale+1:nbIndividuals))
     # Constraint on the number of children per individual
-    @constraint(model, [i in 1:nbIndividuals], x[i] <= 3)
-    #@constraint(model, [i in 1:nbIndividuals], x[i] == 2)
+    #@constraint(model, [i in 1:nbIndividuals], x[i] <= 3)
+    @constraint(model, [i in 1:nbIndividuals], x[i] == 2)
 
     # Number of individuals stays constant
     @constraint(model, sum(x[i] for i in 1:nbIndividuals) == 2* nbIndividuals)
@@ -68,7 +68,12 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
         bound = JuMP.objective_bound(model)
         println("Relaxation bound is " * string(value) * " time is " * string(solveTime))
         println()
+        for i in 1:nbIndividuals
+            println("Parent " * string(i) * " has " * string(x_val[i]) * " children.")
+        end
 
+        println()
+        println()
         realValue = 0
         for i in 1:nbGenes
             for j in 1:nbAlleles
@@ -79,9 +84,6 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
         end
         println()
         println("Real value is " * string(realValue))
-        for i in 1:nbIndividuals
-            println("Parent " * string(i) * " has " * string(x_val[i]) * " children.")
-        end
 
         return
     else
