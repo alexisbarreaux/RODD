@@ -7,7 +7,7 @@ function parser(inst::String="data/DivGenetique.txt")
     end
     M = zeros(8,5,2)
     line = readline(f)
-    while line != "\t"
+    while true
         if line==""
             line = readline(f)
         end
