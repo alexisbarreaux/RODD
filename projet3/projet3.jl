@@ -1,6 +1,7 @@
 using JuMP
 using CPLEX
 
+include("./parser.jl")
 
 """
 include("./projet3/projet3.jl")
@@ -8,18 +9,20 @@ genetics("./projet3/data/data.jl")
 """
 
 function createThetas(R::Int64=50, theta_1::Float64=1e-3)
-    return [theta_1^((h - r)/(h - 1)) for r in 1:R]
+    return [theta_1^((R - r)/(R - 1)) for r in 1:R]
 end
 
-function genetics(inputFile::String="data", showResult::Bool= false, silent::Bool=true)::Any
+function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool= false, silent::Bool=true)::Any
     """
     P : number of individuals
     nbMale : number of males
     """
     R = 50
     thetas = createThetas(R)
-    include("./projet3/data/" * inputFile * ".jl")
-    numberOfSites = n*n
+    println(thetas)
+    return
+    #include("./projet3/data/" * inputFile * ".jl")
+    nbIndividuals, nbMale, nbGenes, nbAlleles, proportion=  parser(inputFile)
 
     # Creating the model
     model = Model(CPLEX.Optimizer)
@@ -46,11 +49,11 @@ function genetics(inputFile::String="data", showResult::Bool= false, silent::Boo
 
     # Linearization constraints
     @constraint(model, [i in 1:nbGenes, j in 1:nbAlleles], y[i,j] >= sum(x[p] for p in 1:nbIndividuals for i in 1:nbGenes 
-                                for j in 1:nbIndividuals if proportion[p,i,j]==1) / nbIndividuals)
+                                for j in 1:nbAlleles if proportion[p,i,j]==1) / nbIndividuals)
     # Linearized log constraints
     for r in 1:R 
-        @constraint(model, [i in 1:nbGenes, j in 1:nbAlleles], log(theta[r]) + (1/theta[r])*(pi[i,j] - y[i,j] - theta[r])>=  
-                        sum(x[p]*log(1-proportion[p,i,j])))
+        @constraint(model, [i in 1:nbGenes, j in 1:nbAlleles], log(thetas[r]) + (1/thetas[r])*(pi[i,j] + y[i,j] - thetas[r])>=  
+                        sum(x[p]*log(1-proportion[p,i,j]) for p in 1:nbIndividuals if proportion[p,i,j] != 1))
     end
 
     optimize!(model)
@@ -65,7 +68,7 @@ function genetics(inputFile::String="data", showResult::Bool= false, silent::Boo
         println("Current value is " * string(value))
         return
     else
-        println("Not feasible or not optimal!!!")
+        println("Not feasible!")
         return
     end
 end
