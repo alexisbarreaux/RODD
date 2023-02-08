@@ -41,6 +41,8 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
     @constraint(model, sum(x[i] for i in 1:nbMale) == sum(x[i] for i in nbMale+1:nbIndividuals))
     # Constraint on the number of children per individual
     @constraint(model, [i in 1:nbIndividuals], x[i] <= 3)
+    #@constraint(model, [i in 1:nbIndividuals], x[i] == 2)
+
     # Number of individuals stays constant
     @constraint(model, sum(x[i] for i in 1:nbIndividuals) == 2* nbIndividuals)
     
