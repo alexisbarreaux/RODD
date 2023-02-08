@@ -19,8 +19,6 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
     """
     R = 50
     thetas = createThetas(R)
-    println(thetas)
-    return
     #include("./projet3/data/" * inputFile * ".jl")
     nbIndividuals, nbMale, nbGenes, nbAlleles, proportion=  parser(inputFile)
 
@@ -33,8 +31,7 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
     ##### Variables #####
     @variable(model, x[i in 1:nbIndividuals] >= 0, Int)
     @variable(model, pi[i in 1:nbGenes, j in 1:nbAlleles] >= 0)
-    @variable(model, y[i in 1:nbGenes, j in 1:nbAlleles], Bin)
-
+    @variable(model, t[i in 1:nbGenes, j in 1:nbAlleles] >= 0)
 
     ##### Objective #####
     @objective(model, Min, sum(pi[i,j] for i in 1:nbGenes for j in 1:nbAlleles))
@@ -45,14 +42,14 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
     # Constraint on the number of children per individual
     @constraint(model, [i in 1:nbIndividuals], x[i] <= 3)
     # Number of individuals stays constant
-    @constraint(model, sum(x[i] for i in 1:nbIndividuals) == nbIndividuals)
+    @constraint(model, sum(x[i] for i in 1:nbIndividuals) == 2* nbIndividuals)
+    
+    # Constraints on pi
+    @constraint(model, [i in 1:nbGenes, j in 1:nbAlleles], pi[i,j] >= t[i,j] - sum(x[p] for p in 1:nbIndividuals if proportion[p,i,j]==1))
 
-    # Linearization constraints
-    @constraint(model, [i in 1:nbGenes, j in 1:nbAlleles], y[i,j] >= sum(x[p] for p in 1:nbIndividuals for i in 1:nbGenes 
-                                for j in 1:nbAlleles if proportion[p,i,j]==1) / nbIndividuals)
     # Linearized log constraints
     for r in 1:R 
-        @constraint(model, [i in 1:nbGenes, j in 1:nbAlleles], log(thetas[r]) + (1/thetas[r])*(pi[i,j] + y[i,j] - thetas[r])>=  
+        @constraint(model, [i in 1:nbGenes, j in 1:nbAlleles], log(thetas[r]) + (1/thetas[r])*(t[i,j] - thetas[r])>=  
                         sum(x[p]*log(1-proportion[p,i,j]) for p in 1:nbIndividuals if proportion[p,i,j] != 1))
     end
 
@@ -65,7 +62,12 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
         solveTime = round(JuMP.solve_time(model), digits= 5)
         gap = JuMP.relative_gap(model)
         bound = JuMP.objective_bound(model)
-        println("Current value is " * string(value))
+        println("Value is " * string(value) * " time is " * string(solveTime))
+        println("Bound is " * string(bound) * " and gap " * string(gap))
+        for i in 1:nbIndividuals
+            println("Parent " * string(i) * " has " * string(x_val[i]) * " children.")
+        end
+
         return
     else
         println("Not feasible!")
