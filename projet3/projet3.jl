@@ -56,14 +56,27 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
     optimize!(model)
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
     isOptimal = termination_status(model) == MOI.OPTIMAL
-    if feasibleSolutionFound
+    if feasibleSolutionFound && isOptimal
         value = JuMP.objective_value(model)
         x_val = JuMP.value.(x)
+        x_val = [round(x_val[i]) for i in 1:length(x_val)]
+
         solveTime = round(JuMP.solve_time(model), digits= 5)
         gap = JuMP.relative_gap(model)
         bound = JuMP.objective_bound(model)
-        println("Value is " * string(value) * " time is " * string(solveTime))
-        println("Bound is " * string(bound) * " and gap " * string(gap))
+        println("Relaxation bound is " * string(value) * " time is " * string(solveTime))
+        println()
+
+        realValue = 0
+        for i in 1:nbGenes
+            for j in 1:nbAlleles
+                alleleDisappearance = prod((1 - proportion[p,i,j])^x_val[p] for p in 1:nbIndividuals)
+                println("Disappearance probability for gene " * string(i) *" allele " * string(j) *" is " * string(alleleDisappearance))
+                realValue += alleleDisappearance
+            end
+        end
+        println()
+        println("Real value is " * string(realValue))
         for i in 1:nbIndividuals
             println("Parent " * string(i) * " has " * string(x_val[i]) * " children.")
         end
