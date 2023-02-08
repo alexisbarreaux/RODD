@@ -60,22 +60,24 @@ function geneticsGenerated(nbIndividuals::Int64, nbMale::Int64, nbGenes::Int64, 
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
     isOptimal = termination_status(model) == MOI.OPTIMAL
     if feasibleSolutionFound && isOptimal
-        value = JuMP.objective_value(model)
+        bound = JuMP.objective_value(model)
         x_val = JuMP.value.(x)
         x_val = [round(x_val[i]) for i in 1:length(x_val)]
 
         solveTime = round(JuMP.solve_time(model), digits= 5)
         gap = JuMP.relative_gap(model)
         bound = JuMP.objective_bound(model)
-        println("Relaxation bound is " * string(value) * " in " * string(solveTime) * " s and " * string(JuMP.node_count(model))* " nodes.")
-        """
-        println()
-        for i in 1:nbIndividuals
-            println("Parent " * string(i) * " has " * string(x_val[i]) * " children.")
-        end
-        """
+        nodes = JuMP.node_count(model)
+        if !silent
+            println("Relaxation bound is " * string(bound) * " in " * string(solveTime) * " s and " * string(nodes)* " nodes.")
 
-        println()
+            println()
+            for i in 1:nbIndividuals
+                println("Parent " * string(i) * " has " * string(x_val[i]) * " children.")
+            end
+
+            println()
+        end
         realValue = 0
         for i in 1:nbGenes
             for j in 1:nbAlleles
@@ -84,10 +86,11 @@ function geneticsGenerated(nbIndividuals::Int64, nbMale::Int64, nbGenes::Int64, 
                 realValue += alleleDisappearance
             end
         end
-        println()
-        println("Real value is " * string(realValue))
-
-        return
+        if !silent
+            println()
+            println("Real value is " * string(realValue))
+        end
+        return solveTime, nodes, realValue, bound
     else
         println("Not feasible!")
         return
