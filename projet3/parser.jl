@@ -19,7 +19,7 @@ function parser(inst::String="data/DivGenetique.txt")
         M[parse(Int64,line[1]),parse(Int64,line[3]), parse(Int64,line[5])] += 0.5
         line = readline(f)
     end
-    return 8, 5, 2, M
+    return 8, 4, 5, 2, M
 end
     
 
