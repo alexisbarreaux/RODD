@@ -12,12 +12,11 @@ function createThetas(R::Int64=50, theta_1::Float64=1e-3)
     return [theta_1^((R - r)/(R - 1)) for r in 1:R]
 end
 
-function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool= false, silent::Bool=true)::Any
+function genetics(R::Int64=50, inputFile::String="./projet3/data/data.txt", showResult::Bool= false, silent::Bool=true)::Any
     """
     P : number of individuals
     nbMale : number of males
     """
-    R = 50
     thetas = createThetas(R)
     #include("./projet3/data/" * inputFile * ".jl")
     nbIndividuals, nbMale, nbGenes, nbAlleles, proportion=  parser(inputFile)
@@ -40,8 +39,8 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
     # Valid children numbers constraint
     @constraint(model, sum(x[i] for i in 1:nbMale) == sum(x[i] for i in nbMale+1:nbIndividuals))
     # Constraint on the number of children per individual
-    #@constraint(model, [i in 1:nbIndividuals], x[i] <= 3)
-    @constraint(model, [i in 1:nbIndividuals], x[i] == 2)
+    @constraint(model, [i in 1:nbIndividuals], x[i] <= 3)
+    #@constraint(model, [i in 1:nbIndividuals], x[i] == 2)
 
     # Number of individuals stays constant
     @constraint(model, sum(x[i] for i in 1:nbIndividuals) == 2* nbIndividuals)
@@ -66,7 +65,7 @@ function genetics(inputFile::String="./projet3/data/data.txt", showResult::Bool=
         solveTime = round(JuMP.solve_time(model), digits= 5)
         gap = JuMP.relative_gap(model)
         bound = JuMP.objective_bound(model)
-        println("Relaxation bound is " * string(value) * " time is " * string(solveTime))
+        println("Relaxation bound is " * string(value) * " in " * string(solveTime) * " s and " * string(JuMP.node_count(model))* " nodes.")
         println()
         for i in 1:nbIndividuals
             println("Parent " * string(i) * " has " * string(x_val[i]) * " children.")
