@@ -49,7 +49,7 @@ function P1(inputFile::String="./data.txt", showResult::Bool= false, silent::Boo
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
     isOptimal = termination_status(model) == MOI.OPTIMAL
     if feasibleSolutionFound && isOptimal
-        value = JuMP.objective_value(model)
+        value = round(JuMP.objective_value(model), digits=2)
         x_val = JuMP.value.(x)
         d_val = JuMP.value.(d)
         
