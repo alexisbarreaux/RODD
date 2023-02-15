@@ -2,10 +2,11 @@ using JuMP
 using CPLEX
 
 include("./parser.jl")
+include("./generateDatas.jl")
 
 """
 include("./projet4/projet4_P2.jl")
-P2()
+P2_bis()
 """
 
 function belowRightNeighbors(i::Int64, j::Int64)::Vector{Tuple{Int64, Int64}}
@@ -135,15 +136,23 @@ function P2_bis(instance::Int64=1, showResult::Bool= false, silent::Bool=true)::
     @variable(model, y[i in 1:m+2, j in 1:n+2, (k,l) in belowRightNeighbors(i,j)] >=0)
 
     ##### Objective #####
-    @objective(model, Max, w1*sum(t[i,j]*(1 - x[i,j]) for i in 2:m+1, j in 2:n+1) + 
-            w2*g*l*sum(x[i,j] + x[k,l] - 2*y[i,j,(k,l)] for i in 1:m+1, j in 1:n+1, (k,l) in belowRightNeighbors(i,j)))
+    leftTerm  = w1*sum(t[i,j]*(1 - x[i,j]) for i=2:m+1, j=2:n+1)
+    righTerm = 0
+    for i=1:m+1
+        for j=1:n+1
+            for (k,l) in belowRightNeighbors(i,j)
+                righTerm += x[i,j] + x[k,l] - 2*y[i,j,(k,l)]
+            end
+        end
+    end
+    righTerm = w2*g*l*righTerm
+
+    @objective(model, Max, leftTerm + righTerm)
     ##### Constraints #####
     # Constraints on y
     @constraint(model, [i in 1:m+1, j in 1:n+1, (k,l) in belowRightNeighbors(i,j)], y[i,j,(k,l)] >= x[i,j] + x[k,l] - 1)
     # x is zero on border
     @constraint(model, [(i,j) in border], x[i,j] == 0)
-    println(model)
-
 
     optimize!(model)
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
