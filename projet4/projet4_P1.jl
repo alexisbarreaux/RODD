@@ -2,6 +2,7 @@ using JuMP
 using CPLEX
 
 include("./parser.jl")
+include("./generateDatas.jl")
 
 """
 include("./projet4/projet4_P1.jl")
@@ -13,15 +14,24 @@ function neighbors(i::Int64, j::Int64)::Vector{Tuple{Int64, Int64}}
 end
 
 
-function P1(inputFile::String="./data.txt", showResult::Bool= false, silent::Bool=true)::Any
+function P1(instance::Int64=1, showResult::Bool= false, silent::Bool=true)::Any
     """
     """
-    m = n = 10
-    w1 = 1
-    w2 = 5
-    l = 3
-    g = 1.26157
-    t = parser()
+    if instance==1
+        m = n = 10
+        w1 = 1
+        w2 = 5
+        l = 3
+        g = 1.26157
+        t = parser()
+    else
+        m = n = 5
+        w1 = 2
+        w2 = 1
+        l = 3
+        g = 1.26157
+        t = instance2()
+    end
 
     border = vcat([(i,j) for i in 1:m+2 for j in [1, n+2]], [(i,j) for i in [1,m+2] for j in 2:n+1])
 
@@ -33,18 +43,17 @@ function P1(inputFile::String="./data.txt", showResult::Bool= false, silent::Boo
 
     ##### Variables #####
     @variable(model, x[i in 1:m+2, j in 1:n+2], Bin)
-    @variable(model, d[i in 1:m+2, j in 1:n+2] >= 0)
+    @variable(model, d[i in 2:m+1, j in 2:n+1] >= 0)
 
     ##### Objective #####
-    @objective(model, Max, sum(t[i,j]*(1 - x[i,j]) for i in 2:m+1, j in 2:n+1) + w2*g*l*sum(4*x[i,j] - d[i,j] for i in 2:m+1, j in 2:n+1))
+    @objective(model, Max, sum(w1*t[i,j]*(1 - x[i,j]) for i in 2:m+1, j in 2:n+1) + w2*g*l*sum(4*x[i,j] - d[i,j] for i in 2:m+1, j in 2:n+1))
     
     ##### Constraints #####
     # Constraint on d
-    @constraint(model, [i in 2:m+1, j in 2:n+1], d[i,j] >= sum(x[k,l] - 4 * (1 - x[i,j]) for (k,l) in neighbors(i,j)))
+    @constraint(model, [i in 2:m+1, j in 2:n+1], d[i,j] >= sum(x[k,l] for (k,l) in neighbors(i,j)) - 4 * (1 - x[i,j]) )
     # x is zero on border
     @constraint(model, [(i,j) in border], x[i,j] == 0)
-    
-    
+
     optimize!(model)
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
     isOptimal = termination_status(model) == MOI.OPTIMAL
@@ -67,6 +76,7 @@ function P1(inputFile::String="./data.txt", showResult::Bool= false, silent::Boo
                 end
             end
         end
+
         println()
         println("Nombre de parcelles non coupées " * string(round(sum(x_val))))
         println("Value is " * string(value) * " in " * string(solveTime) * " s and " * string(JuMP.node_count(model))* " nodes.")
