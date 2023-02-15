@@ -29,15 +29,24 @@ function neighbors(i::Int64, j::Int64, m::Int64, n::Int64)::Vector{Tuple{Int64, 
     return res
 end
 
-function P2(inputFile::String="./data.txt", showResult::Bool= false, silent::Bool=true)::Any
+function P2(instance::Int64=1, showResult::Bool= false, silent::Bool=true)::Any
     """
     """
-    m = n = 10
-    w1 = 1
-    w2 = 5
-    l = 3
-    g = 1.26157
-    t = parser()
+    if instance==1
+        m = n = 10
+        w1 = 1
+        w2 = 5
+        l = 3
+        g = 1.26157
+        t = parser()
+    else
+        m = n = 5
+        w1 = 2
+        w2 = 1
+        l = 3
+        g = 1.26157
+        t = instance2()
+    end
 
     border = vcat([(i,j) for i in 1:m+2 for j in [1, n+2]], [(i,j) for i in [1,m+2] for j in 2:n+1])
 
@@ -52,11 +61,8 @@ function P2(inputFile::String="./data.txt", showResult::Bool= false, silent::Boo
     @variable(model, y[i in 1:m+2, j in 1:n+2, (k,l) in neighbors(i,j,m,n)] >= 0)
     
     ##### Objective #####
-    @objective(model, Max, sum(t[i,j]*(1 - x[i,j]) for i in 2:m+1, j in 2:n+1) + w2*g*l*
+    @objective(model, Max, sum(w1*t[i,j]*(1 - x[i,j]) for i in 2:m+1, j in 2:n+1) + w2*g*l*
     sum(x[i,j] + x[k,l] - 2*y[i,j,(k,l)] for i in 1:m+1, j in 1:n+1, (k,l) in neighbors(i,j,m,n)))
-
-    println(model)
-    return
     ##### Constraints #####
     # Constraints on y
     @constraint(model, [i in 1:m+1, j in 1:n+1, (k,l) in neighbors(i,j,m,n)], y[i,j,(k,l)] >= x[i,j] + x[k,l] - 1)
@@ -97,15 +103,24 @@ function P2(inputFile::String="./data.txt", showResult::Bool= false, silent::Boo
 end
 
 
-function P2_bis(inputFile::String="./data.txt", showResult::Bool= false, silent::Bool=true)::Any
+function P2_bis(instance::Int64=1, showResult::Bool= false, silent::Bool=true)::Any
     """
     """
-    m = n = 10
-    w1 = 1
-    w2 = 5
-    l = 3
-    g = 1.26157
-    t = parser()
+    if instance==1
+        m = n = 10
+        w1 = 1
+        w2 = 5
+        l = 3
+        g = 1.26157
+        t = parser()
+    else
+        m = n = 5
+        w1 = 2
+        w2 = 1
+        l = 3
+        g = 1.26157
+        t = instance2()
+    end
 
     border = vcat([(i,j) for i in 1:m+2 for j in [1, n+2]], [(i,j) for i in [1,m+2] for j in 2:n+1])
 
@@ -116,20 +131,20 @@ function P2_bis(inputFile::String="./data.txt", showResult::Bool= false, silent:
     end
 
     ##### Variables #####
-    @variable(model, x[i in 1:m+2, j in 1:n+2] >= 0)
+    @variable(model, 0 <= x[i in 1:m+2, j in 1:n+2] <= 1)
     @variable(model, y[i in 1:m+2, j in 1:n+2, (k,l) in belowRightNeighbors(i,j)] >=0)
-    
+
     ##### Objective #####
-    @objective(model, Max, sum(t[i,j]*(1 - x[i,j]) for i in 2:m+1, j in 2:n+1) + w2*g*l*
-            sum(x[i,j] + x[k,l] - 2*y[i,j,(k,l)] for i in 1:m+1, j in 1:n+1, (k,l) in belowRightNeighbors(i,j)))
-    
+    @objective(model, Max, w1*sum(t[i,j]*(1 - x[i,j]) for i in 2:m+1, j in 2:n+1) + 
+            w2*g*l*sum(x[i,j] + x[k,l] - 2*y[i,j,(k,l)] for i in 1:m+1, j in 1:n+1, (k,l) in belowRightNeighbors(i,j)))
     ##### Constraints #####
     # Constraints on y
     @constraint(model, [i in 1:m+1, j in 1:n+1, (k,l) in belowRightNeighbors(i,j)], y[i,j,(k,l)] >= x[i,j] + x[k,l] - 1)
     # x is zero on border
     @constraint(model, [(i,j) in border], x[i,j] == 0)
-    @constraint(model, [i in 1:m+2, j in 1:n+2], x[i,j] <= 1)
-    
+    println(model)
+
+
     optimize!(model)
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
     isOptimal = termination_status(model) == MOI.OPTIMAL
@@ -153,6 +168,8 @@ function P2_bis(inputFile::String="./data.txt", showResult::Bool= false, silent:
             end
         end
         println()
+
+        println(sum(y_val))
         println("Nombre de parcelles non coupées " * string(round(sum(x_val))))
         println("Value is " * string(value) * " in " * string(solveTime) * " s and " * string(JuMP.node_count(model))* " nodes.")
         
