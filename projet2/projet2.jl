@@ -58,6 +58,7 @@ function dinkelbach(inputFile::String="data", showResult::Bool= false, silent::B
     
     done = false
     iteration = 0
+    nodes = 0
     while true
         iteration += 1
         println()
@@ -73,6 +74,7 @@ function dinkelbach(inputFile::String="data", showResult::Bool= false, silent::B
         isOptimal = termination_status(model) == MOI.OPTIMAL
         if feasibleSolutionFound && isOptimal
             value = JuMP.objective_value(model)
+            nodes += JuMP.node_count(model)
             println("Current value is " * string(value))
         else
             println("Not feasible or not optimal!!!")
@@ -100,7 +102,7 @@ function dinkelbach(inputFile::String="data", showResult::Bool= false, silent::B
             end
             println()
             println("Optimal value is " * string(fractValue))
-            println("Nodes " * string(JuMP.node_count(model)))
+            println("Nodes " * string(nodes))
             println("Number of sites " * string(round(sum(x_val))))
             println("Sum of y " *  string(sum(y_val)))
             println("time : ", round(time()-start, digits=2),"sec")
@@ -165,6 +167,7 @@ function dinkelbachRandom(n::Int64=10, showResult::Bool= false, silent::Bool=tru
     
     done = false
     iteration = 0
+    nodes = 0
     while true
         iteration += 1
         println()
@@ -178,11 +181,17 @@ function dinkelbachRandom(n::Int64=10, showResult::Bool= false, silent::Bool=tru
 
         feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
         isOptimal = termination_status(model) == MOI.OPTIMAL
-        if feasibleSolutionFound && isOptimal
-            value = JuMP.objective_value(model)
-            println("Current value is " * string(value))
+        if feasibleSolutionFound
+            if isOptimal
+                value = JuMP.objective_value(model)
+                nodes += JuMP.node_count(model)
+                println("Current value is " * string(value))
+            else
+                println("Not optimal!!!")
+                return
+            end
         else
-            println("Not feasible or not optimal!!!")
+            println("Not feasiblel!!!")
             return
         end
 
@@ -198,7 +207,7 @@ function dinkelbachRandom(n::Int64=10, showResult::Bool= false, silent::Bool=tru
             for i in 1:n
                 println()
                 for j in 1:n
-                    if x_val[10*(i-1) + j] >= 1 - 1e-6
+                    if x_val[n*(i-1) + j] >= 1 - 1e-6
                         print("C ")
                     else
                         print("_ ")
@@ -206,8 +215,9 @@ function dinkelbachRandom(n::Int64=10, showResult::Bool= false, silent::Bool=tru
                 end
             end
             println()
+            println("X : ", sum(x_val))
             println("Optimal value is " * string(fractValue))
-            println("Nodes " * string(JuMP.node_count(model)))
+            println("Nodes " * string(nodes))
             println("Number of sites " * string(round(sum(x_val))))
             println("Sum of y " *  string(sum(y_val)))
             println("time : ", round(time()-start, digits=2),"sec")
