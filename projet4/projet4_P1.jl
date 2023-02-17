@@ -53,6 +53,7 @@ function P1(instance::Int64=1, showResult::Bool= false, silent::Bool=true)::Any
     @constraint(model, [i in 2:m+1, j in 2:n+1], d[i,j] >= sum(x[k,l] for (k,l) in neighbors(i,j)) - 4 * (1 - x[i,j]) )
     # x is zero on border
     @constraint(model, [(i,j) in border], x[i,j] == 0)
+    #@constraint(model, sum(x[i,j] for i in 2:m+1, j in 2:n+1) >= 60)
 
     optimize!(model)
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
