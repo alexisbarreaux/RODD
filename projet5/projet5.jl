@@ -21,7 +21,7 @@ function buildGraph()
 end
 
 constD = [31, 62, 70, 25, 36, 20, 52, 32, 59, 43, 51, 29]
-function rollingSolve(d=constD, R::Int64=1, display::Bool=false)
+function rollingSolve(d=constD, R::Int64=2, display::Bool=false)
     T=12 #horizon de temps
     M=4 #nombre de modes
     Emax = 3 #émission carbone maximum à chaque période
@@ -42,10 +42,21 @@ function rollingSolve(d=constD, R::Int64=1, display::Bool=false)
     @constraint(model, s[0]==0)
     @constraint(model, s[T]==0)
     @constraint(model, [t in 1:T], sum(x[t,m] for m in 1:M) - s[t] + s[t-1] == d[t])
-    @constraint(model, sum(x[1,m] for m in 1:M) == d[1])
     @constraint(model, [t in 1:T, m in 1:M], x[t,m] <= (sum(d[t2] for t2 in t:T)*y[t,m]))
-    #@constraint(model, [t in 1:T], sum(e[m] - Emax  for m in 1:M)*x[t,m] <= 0)
-    @constraint(model, [t in R:T], sum(sum(e[m] - Emax  for m in 1:M)*x[t2,m] for t2 in (t-R+1):t) <= 0)
+    # Périodique
+    #@constraint(model, [t in 1:T], sum((e[m] - Emax)  *x[t,m] for m in 1:M) <= 0)
+    # Glissant
+    @constraint(model, [t in R:T], sum(sum((e[m] - Emax) *x[t2,m] for m in 1:M) for t2 in (t-R+1):t) <= 0)
+    # Cumulatif
+    #@constraint(model, [t in 1:T], sum(sum((e[m] - Emax)*x[t2,m]  for m in 1:M) for t2 in 1:t) <= 0)
+    # Global
+    #@constraint(model, sum(sum((e[m] - Emax)*x[t2,m]  for m in 1:M) for t2 in 1:T) <= 0)
+
+    # Au plus deux modes, dont un écologique
+    """
+    @constraint(model, [t in 1:T], sum(y[t,m] for m in 1:M)<= 2)
+    @constraint(model, [t in 1:T], sum(y[t,m] for m in 1:M if e[m] <= Emax) == 1)
+    """
 
     @objective(model, Min, sum(sum(p*x[t,m] + f[m]*y[t,m] for t in 1:T) for m in 1:M) + sum(h*s[t] for t in 1:T))
 
@@ -68,6 +79,7 @@ function rollingSolve(d=constD, R::Int64=1, display::Bool=false)
                 end
             end
         end
+        println(C)
 
         solveTime = round(JuMP.solve_time(model), digits= 5)
         nodes = JuMP.node_count(model)
