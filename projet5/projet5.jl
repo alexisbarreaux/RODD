@@ -13,7 +13,7 @@ function buildGraph()
     println("C :", C)
 end
 
-function rollingSolve(R::Int64=1)
+function rollingSolve(R::Int64=1, display::Bool=false)
     T=12 #horizon de temps
     M=4 #nombre de modes
     Emax = 3 #émission carbone maximum à chaque période
@@ -62,13 +62,14 @@ function rollingSolve(R::Int64=1)
         solveTime = round(JuMP.solve_time(model), digits= 5)
         nodes = JuMP.node_count(model)
         bound = JuMP.objective_bound(model)
-
-        println("Optimal value is " * string(value))
-        println("Nodes " * string(nodes))
-        println("time : ", round(solveTime, digits=2),"sec")
-        println("X : ", x_val)
-        println("Y : ", y_val)
-        println("S : ", s_val)
+        if display
+            println("Optimal value is " * string(value))
+            println("Nodes " * string(nodes))
+            println("time : ", round(solveTime, digits=2),"sec")
+            println("X : ", x_val)
+            println("Y : ", y_val)
+            println("S : ", s_val)
+        end
         return value, C
     else
         println("Problem is not feasible !!!")
