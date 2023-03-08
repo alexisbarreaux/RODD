@@ -52,12 +52,6 @@ function rollingSolve(d=constD, R::Int64=2, display::Bool=false)
     # Global
     #@constraint(model, sum(sum((e[m] - Emax)*x[t2,m]  for m in 1:M) for t2 in 1:T) <= 0)
 
-    # Au plus deux modes, dont un écologique
-    """
-    @constraint(model, [t in 1:T], sum(y[t,m] for m in 1:M)<= 2)
-    @constraint(model, [t in 1:T], sum(y[t,m] for m in 1:M if e[m] <= Emax) == 1)
-    """
-
     @objective(model, Min, sum(sum(p*x[t,m] + f[m]*y[t,m] for t in 1:T) for m in 1:M) + sum(h*s[t] for t in 1:T))
 
     optimize!(model)
