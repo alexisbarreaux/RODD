@@ -58,15 +58,12 @@ function rollingSolve(d=constD, R::Int64=1, display::Bool=false)
         x_val = JuMP.value.(x)
         y_val = JuMP.value.(y)
         s_val = JuMP.value.(s)
-        println(x_val)
-        println(y_val)
-        println(s_val)
 
-        C = 0
+        C = [0. for t in 1:T]
         for t in 1:T
             for m in 1:M
                 if x_val[t,m] > 1e-5
-                    C += (x_val[t,m]*e[m]) / x_val[t,m]
+                    C[t] += (x_val[t,m]*e[m]) / x_val[t,m]
                 end
             end
         end
@@ -82,7 +79,7 @@ function rollingSolve(d=constD, R::Int64=1, display::Bool=false)
             println("Y : ", y_val)
             println("S : ", s_val)
         end
-        return value, C
+        return value, sum(C)/T
     else
         println("Problem is not feasible !!!")
         return
