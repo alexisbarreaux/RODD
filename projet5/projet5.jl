@@ -73,7 +73,6 @@ function rollingSolve(d=constD, R::Int64=2, display::Bool=false)
                 end
             end
         end
-        println(C)
 
         solveTime = round(JuMP.solve_time(model), digits= 5)
         nodes = JuMP.node_count(model)
