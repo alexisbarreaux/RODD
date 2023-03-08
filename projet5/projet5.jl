@@ -2,8 +2,10 @@ using JuMP
 using CPLEX
 
 function buildGraph()
+    T=12
     Obj = Array{Float64}(undef, 0)
     C = Array{Float64}(undef, 0)
+    d = [rand([i for i in 20:70]) for j in 1:T]
     for i in 1:5:100
         o,c = rollingSolve(i)
         append!(Obj, o)
@@ -13,11 +15,10 @@ function buildGraph()
     println("C :", C)
 end
 
-function rollingSolve(R::Int64=1, display::Bool=false)
+function rollingSolve(d=[rand([i for i in 20:70]) for j in 1:T], R::Int64=1, display::Bool=false)
     T=12 #horizon de temps
     M=4 #nombre de modes
     Emax = 3 #émission carbone maximum à chaque période
-    d = [rand([i for i in 20:70]) for j in 1:T] #demande de chaque période
     f = [10, 30, 60, 90] #cout d'approvisionnement de chaque mode
     e = [8, 6, 4, 2] #émission carbone de chaque mode
     h = 1 
@@ -55,7 +56,7 @@ function rollingSolve(R::Int64=1, display::Bool=false)
         C = 0
         for t in 1:T
             for m in 1:M
-                C += x_val[t,m]*e[m]
+                C += (x_val[t,m]*e[m]) / x_val[t,m]
             end
         end
 
