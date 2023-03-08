@@ -6,13 +6,14 @@ include("./projet5/projet5.jl")
 rollingSolve()
 """
 
-function buildGraph()
+function buildGraph(;Emax::Int64=3)
     T=12
     Obj = Array{Float64}(undef, 0)
     C = Array{Float64}(undef, 0)
-    d = [rand([i for i in 20:70]) for j in 1:T]
-    for i in 1:5:100
-        o,c = rollingSolve(i)
+    d = reportD
+    #d = [rand([i for i in 20:70]) for j in 1:T]
+    for i in 1:12
+        o,c = rollingSolve(R=i, Emax=Emax)
         append!(Obj, o)
         append!(C,c)
     end
@@ -20,11 +21,11 @@ function buildGraph()
     println("C :", C)
 end
 
-constD = [31, 62, 70, 25, 36, 20, 52, 32, 59, 43, 51, 29]
-function rollingSolve(d=constD, R::Int64=2, display::Bool=false)
+commonD = [31, 62, 70, 25, 36, 20, 52, 32, 59, 43, 51, 29]
+reportD= [69, 25, 26, 54, 39, 66, 67, 48, 36, 41, 70, 67]
+function rollingSolve(d=reportD; R::Int64=2, Emax::Int64=3, display::Bool=false)
     T=12 #horizon de temps
     M=4 #nombre de modes
-    Emax = 3 #émission carbone maximum à chaque période
     f = [10, 30, 60, 90] #cout d'approvisionnement de chaque mode
     e = [8, 6, 4, 2] #émission carbone de chaque mode
     h = 1 
@@ -65,14 +66,7 @@ function rollingSolve(d=constD, R::Int64=2, display::Bool=false)
         y_val = JuMP.value.(y)
         s_val = JuMP.value.(s)
 
-        C = [0. for t in 1:T]
-        for t in 1:T
-            for m in 1:M
-                if x_val[t,m] > 1e-5
-                    C[t] += (x_val[t,m]*e[m]) / x_val[t,m]
-                end
-            end
-        end
+        C = sum(sum((x_val[t,m]*e[m]) for m in 1:M) for t in 1:T)/ sum(sum((x_val[t,m]) for m in 1:M) for t in 1:T)
 
         solveTime = round(JuMP.solve_time(model), digits= 5)
         nodes = JuMP.node_count(model)
@@ -85,7 +79,7 @@ function rollingSolve(d=constD, R::Int64=2, display::Bool=false)
             println("Y : ", y_val)
             println("S : ", s_val)
         end
-        return value, sum(C)/T
+        return value, C
     else
         println("Problem is not feasible !!!")
         return
