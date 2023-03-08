@@ -35,15 +35,16 @@ function rollingSolve(d=constD, R::Int64=1, display::Bool=false)
 
     ### Variables
     @variable(model, x[t in 1:T, m in 1:M]>= 0)
-    @variable(model, s[t in 1:T]>= 0)
+    @variable(model, s[t in 0:T]>= 0)
     @variable(model, y[t in 1:T, m in 1:M], Bin)
 
-    ### Constraints 
-    @constraint(model, s[1]==0)
+    ### Constraints
+    @constraint(model, s[0]==0)
     @constraint(model, s[T]==0)
-    @constraint(model, [t in 2:T], sum(x[t,m]  for m in 1:M) - s[t] + s[t-1] == d[t])
+    @constraint(model, [t in 1:T], sum(x[t,m] for m in 1:M) - s[t] + s[t-1] == d[t])
     @constraint(model, sum(x[1,m] for m in 1:M) == d[1])
     @constraint(model, [t in 1:T, m in 1:M], x[t,m] <= (sum(d[t2] for t2 in t:T)*y[t,m]))
+    #@constraint(model, [t in 1:T], sum(e[m] - Emax  for m in 1:M)*x[t,m] <= 0)
     @constraint(model, [t in R:T], sum(sum(e[m] - Emax  for m in 1:M)*x[t2,m] for t2 in (t-R+1):t) <= 0)
 
     @objective(model, Min, sum(sum(p*x[t,m] + f[m]*y[t,m] for t in 1:T) for m in 1:M) + sum(h*s[t] for t in 1:T))
